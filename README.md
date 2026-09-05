@@ -2,7 +2,7 @@
 
 **Mitsumeru Desktop** is a fork of [`dataelement/dsh-desktop`](https://github.com/dataelement/dsh-desktop) — the *DeepSeek Harness Desktop* — tracked by the Muen Collective as the base for the **Mitsumeru** product build.
 
-> **Fork status:** this repository is currently a **clean, unmodified fork** of upstream `dsh-desktop` (`main`). It is being run as the **dev channel** to test the stock end-user experience end-to-end (does the product work, yes or no) before any branding is applied. Branding and the Muen plugin set land here only after they are accepted in the dev channel — see [Upstream sync](#upstream-sync).
+> **Fork status:** this repository is a **branded fork** of upstream `dsh-desktop` (`main`). The dev channel applies Mitsumeru branding (app name, icon, appId) and is signed/notarized with a Developer ID certificate. The Muen plugin set and prod posture are applied separately.
 
 ## What upstream is
 
@@ -10,10 +10,10 @@
 
 ## What this fork changes
 
-Nothing — deliberately, for now. This repo exists to:
+This fork applies Mitsumeru branding on top of upstream. The fork exists to:
 
-1. **Serve as the dev build channel** for testing the end-user experience before applying Mitsu branding.
-2. **Hold the upstream source** that we diverge from only after acceptance. At that point this same repository becomes the **prod** channel (Mitsumeru branding + Muen plugin set) and ships signed installers.
+1. **Serve as the dev build channel** — branded with Mitsumeru identity, signed/notarized for distribution.
+2. **Hold the upstream source** that we diverge from. Upstream upgrades are merged and the Muen layer re-applied on top — never by rewriting upstream.
 
 ## Upstream sync
 

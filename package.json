@@ -1,23 +1,24 @@
 {
-  "name": "dsh-desktop",
+  "name": "mitsumeru-desktop",
   "version": "0.1.1",
-  "description": "A cross-platform desktop shell for DeepSeek Harness.",
+  "description": "Mitsumeru — a fork of DeepSeek Harness (DSH) for building bespoke Brand OS applications.",
   "private": true,
   "type": "module",
   "main": "./out/main/index.js",
-  "author": "DataElement",
+  "author": "Muen Collective",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dataelement/dsh-desktop.git"
+    "url": "git+https://github.com/muen-collective/mitsumeru-desktop.git"
   },
   "bugs": {
-    "url": "https://github.com/dataelement/dsh-desktop/issues"
+    "url": "https://github.com/muen-collective/mitsumeru-desktop/issues"
   },
-  "homepage": "https://github.com/dataelement/dsh-desktop#readme",
+  "homepage": "https://github.com/muen-collective/mitsumeru-desktop#readme",
   "keywords": [
-    "deepseek",
-    "harness",
+    "mitsumeru",
+    "muen",
+    "brand-os",
     "electron",
     "desktop",
     "agent"
