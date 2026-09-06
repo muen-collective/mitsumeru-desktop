@@ -36,11 +36,11 @@ jobs:
     needs: [quality]
     timeout-minutes: 5
     outputs:
-      version: ${{ steps.v.outputs.version }}
-      tag: ${{ steps.v.outputs.tag }}
-      is_release: ${{ steps.v.outputs.is_release }}
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      is_release: ${{ steps.version.outputs.is_release }}
     steps:
-      - id: v
+      - id: version
         run: |
           if [ "${{ github.ref_type }}" = "tag" ]; then
             TAG="${{ github.ref_name }}"
