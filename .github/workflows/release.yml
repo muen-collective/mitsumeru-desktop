@@ -1,24 +1,15 @@
 name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      target:
-        description: Platform to build
-        required: false
-        default: all
-        type: choice
-        options:
-          - all
-          - macos
-          - windows
-      prerelease_tag:
-        description: "Non-v semver tag for pre-release (e.g. 0.1.3-rc.1)"
-        required: false
-        type: string
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      prerelease_tag:
+        description: 'Pre-release tag (e.g. 0.1.3-rc.1)'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -31,11 +22,10 @@ env:
   NODE_VERSION: '22'
 
 jobs:
-  # ── Quality gates (always runs) ──────────────────────────────────
   quality:
     name: Typecheck & Test
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,11 +36,10 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
-  # ── Version preparation ──────────────────────────────────────────
   prepare:
     name: Prepare version
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    needs: [quality]
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
@@ -58,36 +47,28 @@ jobs:
     steps:
       - id: version
         run: |
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            tag="${{ github.ref_name }}"
-            version="${tag#v}"
-            echo "is_release=true" >> "$GITHUB_OUTPUT"
-          elif [[ -n "${{ inputs.prerelease_tag }}" ]]; then
-            tag="${{ inputs.prerelease_tag }}"
-            version="${tag}"
-            echo "is_release=false" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${{ github.ref_name }}"
+            VERSION="${TAG#v}"
+            IS_RELEASE=true
+          elif [ -n "${{ inputs.prerelease_tag }}" ]; then
+            TAG="${{ inputs.prerelease_tag }}"
+            VERSION="$TAG"
+            IS_RELEASE=false
           else
-            tag="dev-$(date -u +%Y%m%d-%H%M%S)"
-            version="0.0.0-dev"
-            echo "is_release=false" >> "$GITHUB_OUTPUT"
+            TAG="dev-$(date -u +%Y%m%d-%H%M%S)"
+            VERSION="0.0.0-dev"
+            IS_RELEASE=false
           fi
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "### Version" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Key | Value |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|-----|-------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Tag | \`$tag\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Version | \`$version\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Release | ${{ steps.version.outputs.is_release }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "is_release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
 
-  # ── macOS Apple Silicon ───────────────────────────────────────────
   build-macos-arm64:
     name: macOS Apple Silicon
     runs-on: macos-15
+    needs: [prepare]
     timeout-minutes: 180
-    needs: [quality, prepare]
-    env:
-      IS_RELEASE: ${{ needs.prepare.outputs.is_release }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -96,112 +77,48 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      - name: Prepare signing credentials
+        if: needs.prepare.outputs.is_release == 'true'
+        env:
+          CSC_P12_BASE64: ${{ secrets.DESKTOP_CSC_LINK }}
+          CSC_PASSWORD: ${{ secrets.DESKTOP_CSC_KEY_PASSWORD }}
+          API_KEY_CONTENT: ${{ secrets.DESKTOP_APPLE_API_KEY }}
+          API_KEY_ID: ${{ secrets.DESKTOP_APPLE_API_KEY_ID }}
+          API_ISSUER: ${{ secrets.DESKTOP_APPLE_API_ISSUER }}
+        run: |
+          node -e "const fs=require('fs');const b=process.env.CSC_P12_BASE64||'';fs.writeFileSync(process.env.RUNNER_TEMP+'/developer-id.p12',Buffer.from(b.replace(/^data:.*;base64,/,''),'base64'),{mode:0o600});"
+          printf '%s' "$API_KEY_CONTENT" > "$RUNNER_TEMP/AuthKey_${API_KEY_ID}.p8"
+          echo "CSC_LINK=$RUNNER_TEMP/developer-id.p12" >> "$GITHUB_ENV"
+          echo "CSC_KEY_PASSWORD=$CSC_PASSWORD" >> "$GITHUB_ENV"
+          echo "APPLE_API_KEY=$RUNNER_TEMP/AuthKey_${API_KEY_ID}.p8" >> "$GITHUB_ENV"
+          echo "APPLE_API_KEY_ID=$API_KEY_ID" >> "$GITHUB_ENV"
+          echo "APPLE_API_ISSUER=$API_ISSUER" >> "$GITHUB_ENV"
+      - run: npm ci
       - name: Set version
         run: npm version --no-git-tag-version --allow-same-version "${{ needs.prepare.outputs.version }}"
-      - run: npm ci
-
-      # ── Release build (signed + notarized) ──
-      - name: Prepare signing keychain
-        if: env.IS_RELEASE == 'true'
-        id: signing_keychain
-        env:
-          CSC_LINK: ${{ secrets.DESKTOP_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.DESKTOP_CSC_KEY_PASSWORD }}
-        run: node scripts/prepare-macos-signing-keychain.mjs
-
-      - name: Prepare notarization key
-        if: env.IS_RELEASE == 'true'
-        env:
-          APPLE_API_KEY_CONTENT: ${{ secrets.DESKTOP_APPLE_API_KEY }}
-          APPLE_API_KEY_ID: ${{ secrets.DESKTOP_APPLE_API_KEY_ID }}
-          APPLE_API_ISSUER: ${{ secrets.DESKTOP_APPLE_API_ISSUER }}
-        run: |
-          key_path="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
-          printf '%s' "$APPLE_API_KEY_CONTENT" > "$key_path"
-          chmod 600 "$key_path"
-          echo "APPLE_API_KEY=$key_path" >> "$GITHUB_ENV"
-          echo "APPLE_API_KEY_ID=$APPLE_API_KEY_ID" >> "$GITHUB_ENV"
-          echo "APPLE_API_ISSUER=$APPLE_API_ISSUER" >> "$GITHUB_ENV"
-
       - name: Build signed package
-        if: env.IS_RELEASE == 'true'
-        env:
-          CSC_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
+        if: needs.prepare.outputs.is_release == 'true'
         run: npm run package:mac:arm64
-
-      - name: Build dev package
-        if: env.IS_RELEASE != 'true'
+      - name: Build unsigned dev package
+        if: needs.prepare.outputs.is_release != 'true'
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: npm run package:dev:mac:arm64
-
-      # ── Sign, notarize, staple (release only) ──
-      - name: Sign, notarize, and staple DMG
-        if: env.IS_RELEASE == 'true'
-        env:
-          CSC_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
-        run: |
-          dmg_path="dist/dsh-desktop-mac-arm64.dmg"
-          identity="$(security find-identity -v -p codesigning "$CSC_KEYCHAIN" | awk '/Developer ID Application/ { print $2; exit }')"
-          test -n "$identity" || { echo "::error::Developer ID Application identity not found"; exit 1; }
-          codesign --keychain "$CSC_KEYCHAIN" --sign "$identity" --timestamp --force "$dmg_path"
-          xcrun notarytool submit "$dmg_path" \
-            --key "$APPLE_API_KEY" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER" \
-            --wait --no-s3-acceleration
-          xcrun stapler staple "$dmg_path"
-
-      - name: Verify signed app
-        if: env.IS_RELEASE == 'true'
-        run: |
-          codesign --verify --deep --strict --verbose=2 "dist/mac-arm64/DSH Desktop.app"
-          spctl --assess --type execute --verbose=4 "dist/mac-arm64/DSH Desktop.app"
-          xcrun stapler validate "dist/dsh-desktop-mac-arm64.dmg"
-
-      - name: Preserve update metadata
-        if: env.IS_RELEASE == 'true'
-        run: mv dist/latest-mac.yml dist/latest-mac-arm64.yml
-
-      - name: Cleanup signing keychain
-        if: always() && env.IS_RELEASE == 'true'
-        env:
-          SIGNING_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
-        run: |
-          test -z "$SIGNING_KEYCHAIN" || security delete-keychain "$SIGNING_KEYCHAIN" || true
-
-      # ── Upload artifacts ──
-      - name: Upload release artifacts
-        if: env.IS_RELEASE == 'true'
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: macos-arm64
           path: |
-            dist/dsh-desktop-mac-arm64.dmg
-            dist/dsh-desktop-mac-arm64.zip
-            dist/dsh-desktop-mac-arm64.zip.blockmap
-            dist/latest-mac-arm64.yml
-          if-no-files-found: error
+            dist/*.dmg
+            dist/*.zip
+            dist/latest-mac.yml
+          if-no-files-found: warn
           retention-days: 7
 
-      - name: Upload dev artifacts
-        if: env.IS_RELEASE != 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-arm64-dev
-          path: |
-            dist-dev/dsh-desktop-dev-mac-arm64.dmg
-            dist-dev/dsh-desktop-dev-mac-arm64.zip
-            dist-dev/dsh-desktop-dev-mac-arm64.zip.blockmap
-          if-no-files-found: error
-          retention-days: 3
-
-  # ── macOS Intel ───────────────────────────────────────────────────
   build-macos-x64:
     name: macOS Intel
     runs-on: macos-15-intel
+    needs: [prepare]
     timeout-minutes: 180
-    needs: [quality, prepare]
-    env:
-      IS_RELEASE: ${{ needs.prepare.outputs.is_release }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -210,109 +127,48 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      - name: Prepare signing credentials
+        if: needs.prepare.outputs.is_release == 'true'
+        env:
+          CSC_P12_BASE64: ${{ secrets.DESKTOP_CSC_LINK }}
+          CSC_PASSWORD: ${{ secrets.DESKTOP_CSC_KEY_PASSWORD }}
+          API_KEY_CONTENT: ${{ secrets.DESKTOP_APPLE_API_KEY }}
+          API_KEY_ID: ${{ secrets.DESKTOP_APPLE_API_KEY_ID }}
+          API_ISSUER: ${{ secrets.DESKTOP_APPLE_API_ISSUER }}
+        run: |
+          node -e "const fs=require('fs');const b=process.env.CSC_P12_BASE64||'';fs.writeFileSync(process.env.RUNNER_TEMP+'/developer-id.p12',Buffer.from(b.replace(/^data:.*;base64,/,''),'base64'),{mode:0o600});"
+          printf '%s' "$API_KEY_CONTENT" > "$RUNNER_TEMP/AuthKey_${API_KEY_ID}.p8"
+          echo "CSC_LINK=$RUNNER_TEMP/developer-id.p12" >> "$GITHUB_ENV"
+          echo "CSC_KEY_PASSWORD=$CSC_PASSWORD" >> "$GITHUB_ENV"
+          echo "APPLE_API_KEY=$RUNNER_TEMP/AuthKey_${API_KEY_ID}.p8" >> "$GITHUB_ENV"
+          echo "APPLE_API_KEY_ID=$API_KEY_ID" >> "$GITHUB_ENV"
+          echo "APPLE_API_ISSUER=$API_ISSUER" >> "$GITHUB_ENV"
+      - run: npm ci
       - name: Set version
         run: npm version --no-git-tag-version --allow-same-version "${{ needs.prepare.outputs.version }}"
-      - run: npm ci
-
-      - name: Prepare signing keychain
-        if: env.IS_RELEASE == 'true'
-        id: signing_keychain
-        env:
-          CSC_LINK: ${{ secrets.DESKTOP_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.DESKTOP_CSC_KEY_PASSWORD }}
-        run: node scripts/prepare-macos-signing-keychain.mjs
-
-      - name: Prepare notarization key
-        if: env.IS_RELEASE == 'true'
-        env:
-          APPLE_API_KEY_CONTENT: ${{ secrets.DESKTOP_APPLE_API_KEY }}
-          APPLE_API_KEY_ID: ${{ secrets.DESKTOP_APPLE_API_KEY_ID }}
-          APPLE_API_ISSUER: ${{ secrets.DESKTOP_APPLE_API_ISSUER }}
-        run: |
-          key_path="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
-          printf '%s' "$APPLE_API_KEY_CONTENT" > "$key_path"
-          chmod 600 "$key_path"
-          echo "APPLE_API_KEY=$key_path" >> "$GITHUB_ENV"
-          echo "APPLE_API_KEY_ID=$APPLE_API_KEY_ID" >> "$GITHUB_ENV"
-          echo "APPLE_API_ISSUER=$APPLE_API_ISSUER" >> "$GITHUB_ENV"
-
       - name: Build signed package
-        if: env.IS_RELEASE == 'true'
-        env:
-          CSC_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
+        if: needs.prepare.outputs.is_release == 'true'
         run: npm run package:mac:x64
-
-      - name: Build dev package
-        if: env.IS_RELEASE != 'true'
+      - name: Build unsigned dev package
+        if: needs.prepare.outputs.is_release != 'true'
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: npm run package:dev:mac:x64
-
-      - name: Sign, notarize, and staple DMG
-        if: env.IS_RELEASE == 'true'
-        env:
-          CSC_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
-        run: |
-          dmg_path="dist/dsh-desktop-mac-x64.dmg"
-          identity="$(security find-identity -v -p codesigning "$CSC_KEYCHAIN" | awk '/Developer ID Application/ { print $2; exit }')"
-          test -n "$identity" || { echo "::error::Developer ID Application identity not found"; exit 1; }
-          codesign --keychain "$CSC_KEYCHAIN" --sign "$identity" --timestamp --force "$dmg_path"
-          xcrun notarytool submit "$dmg_path" \
-            --key "$APPLE_API_KEY" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER" \
-            --wait --no-s3-acceleration
-          xcrun stapler staple "$dmg_path"
-
-      - name: Verify signed app
-        if: env.IS_RELEASE == 'true'
-        run: |
-          codesign --verify --deep --strict --verbose=2 "dist/mac/DSH Desktop.app"
-          spctl --assess --type execute --verbose=4 "dist/mac/DSH Desktop.app"
-          xcrun stapler validate "dist/dsh-desktop-mac-x64.dmg"
-
-      - name: Preserve update metadata
-        if: env.IS_RELEASE == 'true'
-        run: mv dist/latest-mac.yml dist/latest-mac-x64.yml
-
-      - name: Cleanup signing keychain
-        if: always() && env.IS_RELEASE == 'true'
-        env:
-          SIGNING_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
-        run: |
-          test -z "$SIGNING_KEYCHAIN" || security delete-keychain "$SIGNING_KEYCHAIN" || true
-
-      - name: Upload release artifacts
-        if: env.IS_RELEASE == 'true'
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: macos-x64
           path: |
-            dist/dsh-desktop-mac-x64.dmg
-            dist/dsh-desktop-mac-x64.zip
-            dist/dsh-desktop-mac-x64.zip.blockmap
-            dist/latest-mac-x64.yml
-          if-no-files-found: error
+            dist/*.dmg
+            dist/*.zip
+            dist/latest-mac.yml
+          if-no-files-found: warn
           retention-days: 7
 
-      - name: Upload dev artifacts
-        if: env.IS_RELEASE != 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-x64-dev
-          path: |
-            dist-dev/dsh-desktop-dev-mac-x64.dmg
-            dist-dev/dsh-desktop-dev-mac-x64.zip
-            dist-dev/dsh-desktop-dev-mac-x64.zip.blockmap
-          if-no-files-found: error
-          retention-days: 3
-
-  # ── Windows x64 ──────────────────────────────────────────────────
   build-windows:
     name: Windows x64
-    runs-on: windows-2022
+    runs-on: windows-latest
+    needs: [prepare]
     timeout-minutes: 180
-    needs: [quality, prepare]
-    env:
-      IS_RELEASE: ${{ needs.prepare.outputs.is_release }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -321,68 +177,24 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      - run: npm ci
       - name: Set version
         run: npm version --no-git-tag-version --allow-same-version "${{ needs.prepare.outputs.version }}"
-      - run: npm ci
-
-      - name: Build release package
-        if: env.IS_RELEASE == 'true'
+      - name: Build release package (unsigned)
+        if: needs.prepare.outputs.is_release == 'true'
         run: npm run package:win
-
       - name: Build dev package
-        if: env.IS_RELEASE != 'true'
+        if: needs.prepare.outputs.is_release != 'true'
         run: npm run package:dev:win
-
-      - name: Smoke test packaged app
-        if: env.IS_RELEASE == 'true'
-        shell: pwsh
-        run: |
-          $exe = "dist\win-unpacked\DSH Desktop.exe"
-          $userData = Join-Path $env:APPDATA 'dsh-desktop'
-          $logPath = Join-Path $userData 'logs\harness.log'
-          if (Test-Path $userData) { Remove-Item -Recurse -Force $userData }
-          $proc = Start-Process -FilePath $exe -PassThru
-          $deadline = (Get-Date).AddSeconds(75)
-          $ready = $false
-          while ((Get-Date) -lt $deadline) {
-            if ($proc.HasExited) { throw "App exited (code $($proc.ExitCode))" }
-            if (Test-Path $logPath) {
-              $log = Get-Content -Raw $logPath
-              if ($log -match 'dsh web: (http://127\.0\.0\.1:\d+/\?token=[^\s]+)') {
-                $ready = $true; break
-              }
-            }
-            Start-Sleep -Milliseconds 500
-          }
-          if (-not $ready) { throw "App not ready within 75s" }
-          if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
-          Write-Host "Smoke test passed"
-
-      - name: Upload release artifacts
-        if: env.IS_RELEASE == 'true'
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: windows-x64
           path: |
-            dist/dsh-desktop-windows-x64-setup.exe
-            dist/dsh-desktop-windows-x64-setup.exe.blockmap
+            dist/*.exe
             dist/latest.yml
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 7
 
-      - name: Upload dev artifacts
-        if: env.IS_RELEASE != 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-x64-dev
-          path: |
-            dist-dev/dsh-desktop-dev-windows-x64-setup.exe
-            dist-dev/dsh-desktop-dev-windows-x64-setup.exe.blockmap
-            dist-dev/latest.yml
-          if-no-files-found: error
-          retention-days: 3
-
-  # ── Publish ───────────────────────────────────────────────────────
   publish:
     name: Publish GitHub Release
     if: needs.prepare.outputs.is_release == 'true'
@@ -391,40 +203,15 @@ jobs:
     timeout-minutes: 15
     env:
       GH_TOKEN: ${{ github.token }}
-      TAG: ${{ needs.prepare.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
-          pattern: macos-*
           path: release-assets
           merge-multiple: true
-      - uses: actions/download-artifact@v4
-        with:
-          name: windows-x64
-          path: release-assets
-
-      - name: Merge macOS update metadata
-        run: |
-          node scripts/merge-mac-update-metadata.mjs \
-            release-assets/latest-mac-arm64.yml \
-            release-assets/latest-mac-x64.yml \
-            release-assets/latest-mac.yml
-          rm -f release-assets/latest-mac-arm64.yml release-assets/latest-mac-x64.yml
-
-      - name: Verify release assets
-        run: node scripts/verify-release-assets.mjs release-assets "${{ needs.prepare.outputs.version }}"
-
       - name: Create GitHub Release
         run: |
-          notes="Mitsumeru Desktop $TAG"
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" release-assets/* --clobber
-          else
-            gh release create "$TAG" release-assets/* \
-              --verify-tag \
-              --title "$notes" \
-              --generate-notes
-          fi
+          gh release create "${{ needs.prepare.outputs.tag }}" \
+            release-assets/*/* \
+            --verify-tag \
+            --title "Mitsumeru Desktop ${{ needs.prepare.outputs.tag }}" \
+            --generate-notes

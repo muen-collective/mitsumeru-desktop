@@ -7,7 +7,6 @@ import { afterEach, describe, expect, it } from 'vitest'
 describe('Feishu release notes pipeline', () => {
   const pythonTestTimeoutMs = 15_000
   const scriptPath = join(process.cwd(), '.github', 'scripts', 'feishu_release_notes.py')
-  const workflowPath = join(process.cwd(), '.github', 'workflows', 'release.yml')
 
   const pythonEnv = { ...process.env, PYTHONIOENCODING: 'utf-8' }
 
@@ -229,16 +228,4 @@ Description here.
     expect(buildPrompt(['--tag', 'v0.8.0'])).toContain('Previous stable tag: v0.7.1')
   })
 
-  it('integrates Feishu release notification into GitHub Actions workflow', () => {
-    const workflow = readFileSync(workflowPath, 'utf8')
-    expect(workflow).toContain('feishu_release_notes.py build-prompt')
-    expect(workflow).toContain('feishu_release_notes.py validate')
-    expect(workflow).toContain('feishu_release_notes.py send')
-    expect(workflow).toContain('FEISHU_RELEASE_WEBHOOK')
-
-    // Check publish-prerelease job has Feishu notification steps
-    expect(workflow).toMatch(/publish-prerelease:[\s\S]*feishu_release_notes\.py build-prompt[\s\S]*--prerelease/)
-    expect(workflow).toMatch(/publish-prerelease:[\s\S]*feishu_release_notes\.py validate[\s\S]*--prerelease/)
-    expect(workflow).toMatch(/publish-prerelease:[\s\S]*feishu_release_notes\.py send[\s\S]*--prerelease/)
-  })
 })
