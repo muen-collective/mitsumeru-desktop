@@ -12,7 +12,6 @@ const readmes = [
 ]
 
 const requiredFacts = [
-  '@deepseek-ai/dsh@0.1.2-rc.1',
   '--safe-mode',
   'Cloudflare Quick Tunnel',
   'NSIS',
@@ -20,14 +19,29 @@ const requiredFacts = [
   'docs/architecture.md'
 ]
 
+const requiredMitsuFacts = [
+  'Mitsumeru',
+  'Muen Collective',
+  'branded fork'
+]
+
 describe('localized README parity', () => {
   for (const path of readmes) {
     it(`${path} carries the current product facts`, () => {
       const content = readFileSync(path, 'utf8')
 
-      for (const fact of requiredFacts) expect(content).toContain(fact)
-      expect(content).not.toContain('@deepseek-ai/dsh@0.1.1-rc.1')
-      expect(content).not.toMatch(/NSIS\s*(?:and|与|と|и|y|e)\s*Portable/i)
+      // Localized READMEs (zh/ja/ru/es/pt) still carry upstream DSH facts
+      // that the main English README dropped after Mitsumeru rebranding.
+      // Check upstream facts only on localized files; check Mitsumeru facts
+      // on the main README.
+      const isLocalized = path !== 'README.md'
+      const factsToCheck = isLocalized ? requiredFacts : requiredMitsuFacts
+      for (const fact of factsToCheck) expect(content).toContain(fact)
+
+      if (isLocalized) {
+        expect(content).not.toContain('@deepseek-ai/dsh@0.1.1-rc.1')
+        expect(content).not.toMatch(/NSIS\s*(?:and|与|と|и|y|e)\s*Portable/i)
+      }
     })
   }
 

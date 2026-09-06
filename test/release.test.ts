@@ -233,16 +233,13 @@ describe('GitHub release contract', () => {
     expect(main).toContain('await showSplash()')
     expect(main).toContain("query: { theme: nativeTheme.shouldUseDarkColors ? 'dark' : 'light' }")
     expect(main).toContain('nativeTheme.themeSource = harnessThemePreference()')
-    expect(splash).toContain('Starting DSH Desktop')
-    expect(splash).toContain('src="dsh-loader.gif"')
-    expect(splash).toContain('src="dsh-loader-dark.gif"')
+    expect(splash).toContain('starting mitsumeru')
+    expect(splash).toContain('src="splash-video.webm"')
     expect(splash).toContain("document.documentElement.dataset.theme = splashTheme === 'dark'")
-    expect(splash).toContain(":root[data-theme='dark']")
-    expect(splash).toContain('brightness(2.4) saturate(0.72)')
-    expect(splash).not.toContain('filter: invert(1)')
-    expect(splash).not.toContain('class="track"')
     expect(splash).toContain('position: fixed;')
     expect(splash).toContain('html[data-platform="windows"] main { padding-top: 70px; }')
+    expect(splash).not.toContain('filter: invert(1)')
+    expect(splash).not.toContain('class="track"')
     expect(patch).not.toMatch(/id:\s*directory-picker/)
     expect(patch).not.toContain("name: '@deepseek-ai/dsh-host-directory-picker-native'")
     expect(patch).not.toContain("name: '@deepseek-ai/dsh-client-ui-directory-picker-native'")
@@ -346,15 +343,15 @@ describe('GitHub release contract', () => {
     expect(packageJson.scripts['package:dev:win']).toContain('verify-target.mjs win32 x64')
     expect(packageJson.scripts['package:dev:win']).toContain('electron-builder.dev.cjs')
     expect(packageJson.scripts['package:dev:win']).toContain('--publish never')
-    expect(developmentConfig).toContain("appId: 'io.dsh.desktop.dev'")
-    expect(developmentConfig).toContain("productName: 'DSH Desktop Dev'")
+    expect(developmentConfig).toContain("appId: 'io.muen.mitsumeru-dev'")
+    expect(developmentConfig).toContain("productName: 'Mitsumeru Dev'")
     expect(developmentConfig).toContain("output: 'dist-dev'")
     expect(developmentConfig).toContain("dshDesktopChannel: 'development'")
     expect(developmentConfig).toContain(
-      "artifactName: 'dsh-desktop-dev-${os}-${arch}.${ext}'"
+      "artifactName: 'mitsumeru-dev-${os}-${arch}.${ext}'"
     )
     expect(developmentConfig).toContain(
-      "artifactName: 'dsh-desktop-dev-windows-${arch}-setup.${ext}'"
+      "artifactName: 'mitsumeru-dev-windows-${arch}-setup.${ext}'"
     )
     expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop-dev'))")
     expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop'))")
@@ -464,7 +461,6 @@ describe('GitHub release contract', () => {
     )
 
     for (const readme of readmes) {
-      expect(readme).toContain('https://www.dshdesktop.com/#download')
       expect(readme).not.toContain('| Platform | Package | Download |')
       expect(readme).not.toContain('| 平台 | 安装包 | 下载 |')
       expect(readme).not.toContain('Coming soon')
