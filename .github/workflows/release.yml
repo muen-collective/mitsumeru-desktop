@@ -39,6 +39,7 @@ jobs:
   prepare:
     name: Prepare
     runs-on: ubuntu-latest
+    needs: [quality]
     timeout-minutes: 5
     outputs:
       version: ${{ steps.v.outputs.version }}
