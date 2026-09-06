@@ -435,7 +435,7 @@ describe('GitHub release contract', () => {
 
     expect(workflow).toContain('name: windows-x64-unsigned')
     expect(workflow).toContain('Sign Windows package locally with UKey')
-    expect(workflow).toContain('runs-on: [self-hosted, macOS, ARM64]')
+    expect(workflow).toContain('runs-on: macos-15')
     expect(workflow).toContain('--storetype ETOKEN')
     expect(workflow).toContain('--storepass "file:$pin_file"')
     expect(workflow).toContain('--tsmode RFC3161')

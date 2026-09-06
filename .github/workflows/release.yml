@@ -455,7 +455,7 @@ jobs:
       always() &&
       (startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != '') &&
       needs.windows-x64.result == 'success'
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: macos-15
     env:
       CI: 'true'
       JSIGN_VERSION: '7.5'
