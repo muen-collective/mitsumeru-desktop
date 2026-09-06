@@ -36,3 +36,4 @@ Unsigned dev installers are produced from the `release.yml` workflow via `workfl
 ## License
 
 MIT — see [LICENSE](LICENSE). Attribution to upstream `dataelement/dsh-desktop`.
+
