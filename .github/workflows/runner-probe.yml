@@ -1,0 +1,22 @@
+name: Runner probe
+
+on:
+  workflow_dispatch:
+
+jobs:
+  macos-arm64:
+    runs-on: macos-15
+    steps:
+      - run: echo "macos-15=$(uname -m)"
+  macos-intel:
+    runs-on: macos-15-intel
+    steps:
+      - run: echo "macos-15-intel=$(uname -m)"
+  windows-2022:
+    runs-on: windows-2022
+    steps:
+      - run: echo "windows-2022 ok"
+  windows-latest:
+    runs-on: windows-latest
+    steps:
+      - run: echo "windows-latest ok"
