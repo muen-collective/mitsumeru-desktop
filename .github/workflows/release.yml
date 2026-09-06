@@ -82,7 +82,6 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Prepare signing credentials
-        if: env.IS_RELEASE == 'true'
         env:
           CSC_P12_BASE64: ${{ secrets.DESKTOP_CSC_LINK }}
           CSC_PASSWORD: ${{ secrets.DESKTOP_CSC_KEY_PASSWORD }}
@@ -100,10 +99,8 @@ jobs:
       - name: Set version
         run: npm version --no-git-tag-version --allow-same-version "${{ needs.prepare.outputs.version }}"
       - name: Build signed package
-        if: env.IS_RELEASE == 'true'
         run: npm run package:mac:arm64
       - name: Build unsigned dev package
-        if: env.IS_RELEASE != 'true'
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: npm run package:dev:mac:arm64
