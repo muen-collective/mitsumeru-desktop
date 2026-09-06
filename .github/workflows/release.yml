@@ -97,7 +97,7 @@ jobs:
           echo "APPLE_API_KEY_ID=$API_KEY_ID" >> "$GITHUB_ENV"
           echo "APPLE_API_ISSUER=$API_ISSUER" >> "$GITHUB_ENV"
       - name: Set version
-        run: npm version --no-git-tag-version --allow-same-version "${{ needs.prepare.outputs.version }}"
+        run: npm version --no-git-tag-version --allow-same-version ${{ needs.prepare.outputs.version }}
       - name: Build signed package
         run: npm run package:mac:arm64
       - name: Build unsigned dev package
