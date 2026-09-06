@@ -12,10 +12,10 @@
       }
     </script>
     <style>
-      :root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      :root { color-scheme: dark; font-family: 'Fragment Mono', ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace; }
       * { box-sizing: border-box; }
       html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
-      body { color: #17181a; background: #0a0a0c; }
+      body { color: #f0f0f2; background: #0a0a0c; }
       main {
         position: fixed;
         inset: 0;
@@ -28,22 +28,22 @@
       }
       html[data-platform="windows"] main { padding-top: 70px; }
       .markFrame { display: grid; place-items: center; width: 100%; }
-      .splashVideo { width: 320px; height: auto; border-radius: 8px; }
-      .title { margin: 0; font-size: 23px; font-weight: 650; letter-spacing: -0.02em; color: #f3f4f6; }
-      .status { margin: -4px 0 0; color: #9ca0a8; font-size: 13px; }
-      :root[data-theme='dark'] {
-        color-scheme: dark;
+      .splashVideo { width: 280px; height: auto; border-radius: 8px; opacity: 0.8; }
+      .title { margin: 0; font-size: 16px; font-weight: 400; letter-spacing: 0.01em; color: #f0f0f2; font-family: inherit; }
+      .title .sigil { color: #ff3333; }
+      .status { margin: -2px 0 0; color: #6b6b73; font-size: 12px; font-family: inherit; }
+      .cursor {
+        display: inline-block;
+        width: 7px;
+        height: 1em;
+        background: #ff3333;
+        vertical-align: text-bottom;
+        margin-left: 2px;
+        animation: blink 1s step-end infinite;
       }
-      :root[data-theme='dark'] body {
-        color: #f3f4f6;
-        background: #0a0a0c;
-      }
-      :root[data-theme='dark'] .status {
-        color: #9ca0a8;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root:not([data-theme]) body { color: #f3f4f6; background: #0a0a0c; }
-        :root:not([data-theme]) .status { color: #9ca0a8; }
+      @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+      @media (prefers-reduced-motion: reduce) {
+        .cursor { animation: none; opacity: 1; }
       }
     </style>
   </head>
@@ -52,13 +52,13 @@
       <div class="markFrame" aria-hidden="true">
         <video class="splashVideo" src="splash-video.webm" autoplay loop muted playsinline></video>
       </div>
-      <h1 class="title" id="title">Starting Mitsumeru</h1>
-      <p class="status" id="status">First launch may take a moment.</p>
+      <h1 class="title" id="title"><span class="sigil">✦</span> starting mitsumeru<span class="cursor"></span></h1>
+      <p class="status" id="status">the gaze awakens.</p>
     </main>
     <script>
       if (navigator.language.toLowerCase().startsWith('zh')) {
-        document.getElementById('title').textContent = '正在启动 Mitsumeru'
-        document.getElementById('status').textContent = '首次启动可能需要一点时间。'
+        document.getElementById('title').innerHTML = '<span class="sigil">✦</span> 正在启动 Mitsumeru<span class="cursor"></span>'
+        document.getElementById('status').textContent = '凝视正在觉醒。'
       }
     </script>
   </body>
