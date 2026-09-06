@@ -361,7 +361,7 @@ describe('GitHub release contract', () => {
     expect(workflow).toContain('name: macOS Apple Silicon')
     expect(workflow).toContain('name: macOS Intel')
     expect(workflow).toContain('name: Windows x64')
-    expect(workflow).toContain('name: Publish GitHub Release')
+    expect(workflow).toContain('name: Publish')
   })
   it('signs and notarizes both macOS architectures on tag releases', async () => {
     const workflow = await readFile(
@@ -378,10 +378,11 @@ describe('GitHub release contract', () => {
     ]) {
       expect(workflow).toContain(`secrets.${secret}`)
     }
-    expect(workflow.match(/Prepare signing credentials/g)).toHaveLength(2)
+    expect(workflow.match(/Prepare signing certificate/g)).toHaveLength(2)
+    expect(workflow.match(/Prepare Apple notarization key/g)).toHaveLength(2)
     expect(workflow.match(/CSC_IDENTITY_AUTO_DISCOVERY: 'false'/g)).toHaveLength(2)
-    expect(workflow.match(/CSC_LINK=\$RUNNER_TEMP\/developer-id\.p12/g)).toHaveLength(2)
-    expect(workflow.match(/APPLE_API_KEY=\$RUNNER_TEMP\/AuthKey_/g)).toHaveLength(2)
+    expect(workflow.match(/CSC_LINK=\$p12/g)).toHaveLength(2)
+    expect(workflow.match(/APPLE_API_KEY=\$key_path/g)).toHaveLength(2)
   })
 
   it('routes the published download through the official website', async () => {
