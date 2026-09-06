@@ -213,17 +213,5 @@ jobs:
     if: needs.prepare.outputs.is_release == 'true'
     needs: [prepare, build-macos-arm64, build-macos-x64, build-windows]
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          path: release-assets
-          merge-multiple: true
-      - name: Create GitHub Release
-        run: |
-          gh release create "${{ needs.prepare.outputs.tag }}" \
-            release-assets/*/* \
-            --verify-tag \
-            --title "Mitsumeru Desktop ${{ needs.prepare.outputs.tag }}" \
-            --generate-notes
+      - run: echo publish
