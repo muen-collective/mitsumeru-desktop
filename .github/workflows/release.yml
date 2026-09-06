@@ -122,6 +122,9 @@ jobs:
             dist/*.dmg
             dist/*.zip
             dist/latest-mac.yml
+            dist-dev/*.dmg
+            dist-dev/*.zip
+            dist-dev/latest-mac.yml
           if-no-files-found: warn
           retention-days: 7
 
@@ -182,6 +185,9 @@ jobs:
             dist/*.dmg
             dist/*.zip
             dist/latest-mac.yml
+            dist-dev/*.dmg
+            dist-dev/*.zip
+            dist-dev/latest-mac.yml
           if-no-files-found: warn
           retention-days: 7
 
@@ -213,6 +219,8 @@ jobs:
           path: |
             dist/*.exe
             dist/latest.yml
+            dist-dev/*.exe
+            dist-dev/latest.yml
           if-no-files-found: warn
           retention-days: 7
 
