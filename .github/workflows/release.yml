@@ -48,19 +48,22 @@ jobs:
     steps:
       - id: v
         run: |
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            echo "version=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
-            echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
-            echo "is_release=true" >> "$GITHUB_OUTPUT"
-          elif [[ -n "${{ inputs.prerelease_tag }}" ]]; then
-            echo "version=${{ inputs.prerelease_tag }}" >> "$GITHUB_OUTPUT"
-            echo "tag=${{ inputs.prerelease_tag }}" >> "$GITHUB_OUTPUT"
-            echo "is_release=false" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${{ github.ref_name }}"
+            VERSION="${TAG#v}"
+            IS_RELEASE=true
+          elif [ -n "${{ inputs.prerelease_tag }}" ]; then
+            TAG="${{ inputs.prerelease_tag }}"
+            VERSION="$TAG"
+            IS_RELEASE=false
           else
-            echo "version=0.0.0-dev" >> "$GITHUB_OUTPUT"
-            echo "tag=dev-$(date -u +%%Y%%m%%d-%%H%%M%%S)" >> "$GITHUB_OUTPUT"
-            echo "is_release=false" >> "$GITHUB_OUTPUT"
+            TAG="dev-$(date -u +%Y%m%d-%H%M%S)"
+            VERSION="0.0.0-dev"
+            IS_RELEASE=false
           fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "is_release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
   build-mac-arm64:
     name: macOS ARM64
     runs-on: macos-15
