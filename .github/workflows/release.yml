@@ -97,7 +97,8 @@ jobs:
           CSC_PASSWORD: ${{ secrets.DESKTOP_APPLE_API_KEY_ID }}
         run: |
           p12="$RUNNER_TEMP/developer-id.p12"
-          printf '%s' "$CSC_P12_BASE64" | base64 -d > "$p12"
+          printf '%s' "$CSC_P12_BASE64" > "$p12"
+          chmod 600 "$p12"
           echo "CSC_LINK=$p12" >> "$GITHUB_ENV"
           echo "CSC_KEY_PASSWORD=$CSC_PASSWORD" >> "$GITHUB_ENV"
       - name: Set version
