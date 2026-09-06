@@ -1,0 +1,102 @@
+name: Release desktop installers
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Platform to build
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - windows
+          - macos
+      prerelease_tag:
+        description: Non-v semver tag
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  macos-apple-silicon:
+    name: macOS Apple Silicon
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'macos'))
+    runs-on: macos-15
+    steps:
+      - run: echo "Apple Silicon build"
+
+  macos-intel:
+    name: macOS Intel
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'macos'))
+    runs-on: macos-15-intel
+    steps:
+      - run: echo "Intel build"
+
+  windows-x64:
+    name: Windows x64
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' &&
+        (inputs.target == 'all' || inputs.target == 'windows' || inputs.prerelease_tag != ''))
+    runs-on: windows-2022
+    steps:
+      - run: echo "Windows build"
+
+  sign-windows:
+    name: Sign Windows package locally with UKey
+    needs: windows-x64
+    if: >-
+      always() &&
+      (startsWith(github.ref, 'refs/tags/v') || inputs.prerelease_tag != '') &&
+      needs.windows-x64.result == 'success'
+    runs-on: macos-15
+    steps:
+      - run: echo "Sign Windows"
+
+  publish:
+    name: Publish GitHub Release
+    if: >-
+      always() &&
+      startsWith(github.ref, 'refs/tags/v') &&
+      inputs.prerelease_tag == '' &&
+      needs.macos-apple-silicon.result == 'success' &&
+      needs.macos-intel.result == 'success' &&
+      needs.sign-windows.result == 'success'
+    needs:
+      - macos-apple-silicon
+      - macos-intel
+      - sign-windows
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo "Publish release"
+
+  publish-prerelease:
+    name: Publish GitHub Pre-release
+    if: >-
+      always() &&
+      github.event_name == 'workflow_dispatch' &&
+      inputs.prerelease_tag != '' &&
+      needs.macos-apple-silicon.result == 'success' &&
+      needs.macos-intel.result == 'success' &&
+      needs.sign-windows.result == 'success'
+    needs:
+      - macos-apple-silicon
+      - macos-intel
+      - sign-windows
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo "Publish prerelease"
