@@ -93,8 +93,8 @@ jobs:
           echo "APPLE_API_ISSUER=$APPLE_API_ISSUER" >> "$GITHUB_ENV"
       - name: Prepare signing certificate
         env:
-          CSC_P12_BASE64: ${{ secrets.DESKTOP_CSC_LINK }}
-          CSC_PASSWORD: ${{ secrets.DESKTOP_CSC_KEY_PASSWORD }}
+          CSC_P12_BASE64: ${{ secrets.DESKTOP_APPLE_API_KEY }}
+          CSC_PASSWORD: ${{ secrets.DESKTOP_APPLE_API_KEY_ID }}
         run: |
           p12="$RUNNER_TEMP/developer-id.p12"
           printf '%s' "$CSC_P12_BASE64" | base64 -d > "$p12"
