@@ -1,0 +1,13 @@
+name: Test release trigger
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo "Release workflow triggered successfully"
