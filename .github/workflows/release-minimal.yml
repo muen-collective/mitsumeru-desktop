@@ -1,0 +1,38 @@
+name: Release desktop installers
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Platform to build
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - windows
+          - macos
+      prerelease_tag:
+        description: Non-v semver tag for a production-parity pre-release (e.g. 2.1.0-rc.1)
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  macos-apple-silicon:
+    name: macOS Apple Silicon
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'macos'))
+    runs-on: macos-15
+    steps:
+      - run: echo "Apple Silicon build step"
