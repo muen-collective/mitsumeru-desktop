@@ -491,12 +491,12 @@ function attachWindowsMenuView(window: BrowserWindow): void {
 
 function configureAppIdentity(): void {
   if (developmentBuild) {
-    app.setName('DSH Desktop Dev')
+    app.setName('Mitsumeru Dev')
     app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop-dev'))
     return
   }
 
-  app.setName('DSH Desktop')
+  app.setName('Mitsumeru')
   // Keep the historical lowercase directory stable across product-name and
   // branding changes. Harness stores workspaces, sessions, credentials, and
   // custom presets below userData, so deriving this path from app.getName()
