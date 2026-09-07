@@ -82,9 +82,9 @@ jobs:
       - name: Prepare Apple notarization key
         if: needs.prepare.outputs.is_release == 'true'
         env:
-          APPLE_API_KEY_CONTENT: dummy_apikey
-          APPLE_API_KEY_ID: dummy_keyid
-          APPLE_API_ISSUER: dummy_issuer
+          APPLE_API_KEY_CONTENT: ${{ secrets.DESKTOP_APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.DESKTOP_APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.DESKTOP_APPLE_API_ISSUER }}
         run: |
           key_path="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
           printf '%s' "$APPLE_API_KEY_CONTENT" > "$key_path"
