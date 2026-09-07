@@ -386,7 +386,7 @@
       }
     ],
     "detectUpdateChannel": false,
-    "artifactName": "mitsumeru-${os}-${arch}.${ext}",
+    "artifactName": "mitsumeru-${version}-${os}-${arch}.${ext}",
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "build/icon.icns",
@@ -413,7 +413,7 @@
       ]
     },
     "nsis": {
-      "artifactName": "mitsumeru-windows-${arch}-setup.${ext}",
+      "artifactName": "mitsumeru-${version}-windows-${arch}-setup.${ext}",
       "include": "build/installer.nsh",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
