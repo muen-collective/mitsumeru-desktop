@@ -55,7 +55,7 @@ jobs:
           elif [ -n "${{ inputs.prerelease_tag }}" ]; then
             TAG="${{ inputs.prerelease_tag }}"
             VERSION="$TAG"
-            IS_RELEASE=false
+            IS_RELEASE=true
           else
             TAG="dev-$(date -u +%Y%m%d-%H%M%S)"
             VERSION="0.0.0-dev"
@@ -226,7 +226,7 @@ jobs:
 
   publish:
     name: Publish
-    if: needs.prepare.outputs.is_release == 'true'
+    if: needs.prepare.outputs.is_release == 'true' && github.ref_type == 'tag'
     needs: [prepare, build-macos-arm64, build-macos-x64, build-windows]
     runs-on: ubuntu-latest
     env:
