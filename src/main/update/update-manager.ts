@@ -1,13 +1,9 @@
-import { app, BrowserWindow, ipcMain, powerMonitor } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import electronUpdater from 'electron-updater'
 import type { UpdateStatus } from '../../shared/contracts'
 import {
   AUTO_INSTALL_ON_APP_QUIT,
-  shouldCheckAfterResume,
-  supportsAutoUpdates,
-  UPDATE_CHECK_INTERVAL_MS,
-  UPDATE_STARTUP_DELAY_MS,
-  UPDATE_STARTUP_JITTER_MS
+  supportsAutoUpdates
 } from './update-policy'
 import {
   initialUpdateStatus,
@@ -32,8 +28,6 @@ const TRANSIENT_STATUS_MS = 8_000
 
 let status = initialUpdateStatus(app.getVersion())
 let prepareToInstall: (() => Promise<void>) | undefined
-let startupTimer: NodeJS.Timeout | undefined
-let intervalTimer: NodeJS.Timeout | undefined
 let resetTimer: NodeJS.Timeout | undefined
 let checkPromise: Promise<unknown> | undefined
 let lastCheckedAt = 0
@@ -104,13 +98,12 @@ export function startUpdateManager(options: { prepareToInstall: () => Promise<vo
     return
   }
 
+  // Mitsu fork (v0.0.1): auto-update is intentionally OFF. We never phone home
+  // to an upstream feed on a schedule; the only update path is the manual
+  // "Check for updates" action (`updates:check` ~ `checkForUpdates(true)`). So we
+  // configure the updater (so the manual action works) but do NOT arm the
+  // startup timer, the 6h interval, or the resume hook.
   configureUpdater()
-  startupTimer = setTimeout(
-    () => void checkForUpdates(),
-    UPDATE_STARTUP_DELAY_MS + Math.random() * UPDATE_STARTUP_JITTER_MS
-  )
-  intervalTimer = setInterval(() => void checkForUpdates(), UPDATE_CHECK_INTERVAL_MS)
-  powerMonitor.on('resume', checkAfterResume)
 }
 
 export async function checkForUpdates(manual = false): Promise<UpdateStatus> {
@@ -224,13 +217,8 @@ export async function installDownloadedUpdate(): Promise<void> {
 }
 
 export function stopUpdateManager(): void {
-  if (startupTimer) clearTimeout(startupTimer)
-  if (intervalTimer) clearInterval(intervalTimer)
   if (resetTimer) clearTimeout(resetTimer)
-  startupTimer = undefined
-  intervalTimer = undefined
   resetTimer = undefined
-  if (started && app.isReady()) powerMonitor.removeListener('resume', checkAfterResume)
 }
 
 function configureUpdater(): void {
@@ -298,10 +286,6 @@ function scheduleReset(): void {
   if (!status.manual) return
   if (resetTimer) clearTimeout(resetTimer)
   resetTimer = setTimeout(() => transition({ type: 'reset' }), TRANSIENT_STATUS_MS)
-}
-
-function checkAfterResume(): void {
-  if (shouldCheckAfterResume(lastCheckedAt)) void checkForUpdates()
 }
 
 function supportsUpdates(): boolean {
