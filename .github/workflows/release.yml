@@ -95,8 +95,8 @@ jobs:
       - name: Prepare signing certificate
         if: needs.prepare.outputs.is_release == 'true'
         env:
-          CSC_P12_BASE64: dummy_csc
-          CSC_PASSWORD: dummy_pw
+          CSC_P12_BASE64: ${{ secrets.DESKTOP_CSC_LINK }}
+          CSC_PASSWORD: ${{ secrets.DESKTOP_CSC_KEY_PASSWORD }}
         run: |
           b64="$RUNNER_TEMP/developer-id.p12.b64"
           p12="$RUNNER_TEMP/developer-id.p12"
