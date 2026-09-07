@@ -297,6 +297,17 @@ onlineSourceFor = new Map()) {
             result[name] = { kind: spec.startsWith('github:') ? 'github' : 'npm', version, current: null, latest: null, updateAvailable: false };
         }
     }));
+    // Mitsu fork: the market is self-owned and version-pinned by us; never offer
+    // a self-update from the remote registry (we install plugins manually via
+    // npm). Force the market's own rows (dshmarket / dsh-market) to "no update"
+    // so the "Update the plugin market" button never renders.
+    for (const name of ['dshmarket', 'dsh-market']) {
+        const row = result[name];
+        if (row !== undefined) {
+            row.updateAvailable = false;
+            row.channelSwitch = undefined;
+        }
+    }
     updatesCache = { key: cacheKey, at: Date.now(), data: result };
     return result;
 }

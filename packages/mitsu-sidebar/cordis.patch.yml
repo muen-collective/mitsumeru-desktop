@@ -1,0 +1,37 @@
+# @muen/mitsu-sidebar bundle patch (owned fork of dsh-better-sidebar)
+#
+# This file is the `dsh.bundle.patch` layer of the Muen fork. When the fork is
+# installed through the desktop generation mechanism (or the official CLI), the
+# profile boot merges THIS patch — a single `insert` of the plugin row — to mount
+# the Mitsu sidebar under its OWN name.
+#
+# IMPORTANT: the insert `name` MUST be this fork's package name
+# (`@muen/mitsu-sidebar`), NOT `dsh-better-sidebar`. The loader resolves the
+# entry's `name` as a package spec; pointing it at `dsh-better-sidebar` fails
+# the whole tree at boot when the upstream package is not installed
+# ("Cannot find package 'dsh-better-sidebar'").
+#
+# To choose the terminal shell, add `config.shell` to the inserted plugin row.
+# `config.shellArgs` optionally supplies explicit startup arguments; when
+# non-empty they replace the automatic POSIX `-l` login flag:
+#
+#   - insert:
+#       - id: mitsu-sidebar
+#         name: '@muen/mitsu-sidebar'
+#         config:
+#           shell: /bin/zsh
+#           shellArgs:
+#             - --noprofile
+#             - --no-rc
+#
+# Double-mount guard: an aggregate bundle (e.g. @linxin666/dsh-web-ui-all) may
+# already mount `dsh-better-sidebar` under its own entry id. Two mounts
+# registering /sidebar/api twice fail the whole plugin tree at boot
+# ("duplicate prefix route"). The `!!js` disabled expression backs THIS row off
+# when another *enabled* entry already mounts either the fork or the upstream
+# package; the aggregate (or upstream) instance then owns the sidebar. Keep
+# this row LAST among the sidebar providers so the guard can see the earlier one.
+- insert:
+    - id: mitsu-sidebar
+      name: '@muen/mitsu-sidebar'
+      disabled: !!js "[...ctx.loader.entries()].some((e) => (e.options.name === '@muen/mitsu-sidebar' || e.options.name === 'dsh-better-sidebar') && e.options.id !== 'mitsu-sidebar' && !e.disabled)"

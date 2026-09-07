@@ -13,6 +13,15 @@ build/icon-1024.png
 .env
 .env.*
 !.env.example
+
+# Stale Muen pack artifacts (built by npm pack from a fork source; the source
+# dirs in packages/ are the controlled artifact, not these tarballs).
+# muen-dsh-brand-mitsumeru-0.0.1.tgz is a real file: dependency and stays tracked.
+/packages/muen-mitsu-sidebar-*.tgz
+/packages/muen-dsh-brand-swap-*.tgz
+/packages/muen-dsh-language-switcher-*.tgz
+/packages/muen-dsh-muen-plugins-*.tgz
+/packages/muen-dsh-theme-runtime-*.tgz
 .coaligne/
 .coaligneignore
 

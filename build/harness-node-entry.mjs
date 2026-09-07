@@ -16,6 +16,14 @@ if (process.versions.electron !== undefined) {
   process.env.ELECTRON_RUN_AS_NODE = '1'
 }
 
+// Strip --expose-internals so cordis-plugin-loader falls back to
+// createRequire for module resolution instead of the internal ESM loader.
+// The internal loader resolves bare specifiers from its own file location
+// and cannot find @muen/* packages in the app bundle's node_modules.
+// createRequire resolves correctly from the harness profile's baseUrl.
+const eiIndex = process.execArgv.indexOf('--expose-internals')
+if (eiIndex !== -1) process.execArgv.splice(eiIndex, 1)
+
 const [dshEntryPath, ...dshArguments] = process.argv.slice(2)
 
 function report(label, value) {

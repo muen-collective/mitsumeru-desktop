@@ -21,12 +21,14 @@
     - id: dsh-desktop-market-installer
       name: dsh-desktop-market-installer
 
-    # DSH PPT owns one direct PPTD workflow and one standard Composer client.
-    # The package contains no Tencent editor runtime or SlideP route.
-    - id: dsh-ppt-composer
-      name: 'dsh-ppt-composer'
-      config:
-        root: !!js dshHomePath('kimi-ppt')
+# Mitsu self-brand: fill the DSH brand slots with the Mitsumeru kanji + wordmark
+# (replaces the DeepSeek official brand). Inserted at the desktop layer so the
+# loader composes @muen/dsh-brand-mitsumeru as a bundle and loads its client
+# (slot registrations). ui-brand-official is disabled above, so this is the
+# sole sidebar/hero brand occupant.
+- insert:
+    - id: brand-mitsumeru
+      name: '@muen/dsh-brand-mitsumeru'
 
 # dsh-market normally offers to restart its own Node process after mutations.
 # The desktop shell has the real lifecycle authority, so keep that behavior off
