@@ -1,4 +1,4 @@
-# @muen/mitsu-sidebar bundle patch (owned fork of dsh-better-sidebar)
+# dsh-advanced-panel bundle patch (owned fork of dsh-better-sidebar)
 #
 # This file is the `dsh.bundle.patch` layer of the Muen fork. When the fork is
 # installed through the desktop generation mechanism (or the official CLI), the
@@ -6,7 +6,7 @@
 # the Mitsu sidebar under its OWN name.
 #
 # IMPORTANT: the insert `name` MUST be this fork's package name
-# (`@muen/mitsu-sidebar`), NOT `dsh-better-sidebar`. The loader resolves the
+# (`dsh-advanced-panel`), NOT `dsh-better-sidebar`. The loader resolves the
 # entry's `name` as a package spec; pointing it at `dsh-better-sidebar` fails
 # the whole tree at boot when the upstream package is not installed
 # ("Cannot find package 'dsh-better-sidebar'").
@@ -16,8 +16,8 @@
 # non-empty they replace the automatic POSIX `-l` login flag:
 #
 #   - insert:
-#       - id: mitsu-sidebar
-#         name: '@muen/mitsu-sidebar'
+#       - id: advanced-panel
+#         name: 'dsh-advanced-panel'
 #         config:
 #           shell: /bin/zsh
 #           shellArgs:
@@ -32,6 +32,6 @@
 # package; the aggregate (or upstream) instance then owns the sidebar. Keep
 # this row LAST among the sidebar providers so the guard can see the earlier one.
 - insert:
-    - id: mitsu-sidebar
-      name: '@muen/mitsu-sidebar'
-      disabled: !!js "[...ctx.loader.entries()].some((e) => (e.options.name === '@muen/mitsu-sidebar' || e.options.name === 'dsh-better-sidebar') && e.options.id !== 'mitsu-sidebar' && !e.disabled)"
+    - id: advanced-panel
+      name: 'dsh-advanced-panel'
+      disabled: !!js "[...ctx.loader.entries()].some((e) => (e.options.name === 'dsh-advanced-panel' || e.options.name === 'dsh-better-sidebar') && e.options.id !== 'advanced-panel' && !e.disabled)"
