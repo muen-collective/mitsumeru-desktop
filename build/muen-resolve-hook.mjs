@@ -17,7 +17,7 @@
 
 import { readFileSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join } from 'node:path'
 import { existsSync } from 'node:fs'
 
 const SELF_DIR = dirname(fileURLToPath(import.meta.url))
