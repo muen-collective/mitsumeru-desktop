@@ -15,6 +15,13 @@
     - id: dsh-desktop-client-ui
       name: dsh-desktop-client-ui
 
+    # Advanced panel (our fork of dsh-better-sidebar): right sidebar / bottom
+    # panel workbench. Inserted at the desktop layer so it composes on every
+    # fresh profile.
+    - id: advanced-panel
+      name: 'dsh-advanced-panel'
+      disabled: !!js "[...ctx.loader.entries()].some((e) => (e.options.name === 'dsh-advanced-panel' || e.options.name === 'dsh-better-sidebar') && e.options.id !== 'advanced-panel' && !e.disabled)"
+
     # PPT authoring UI is mounted from the reviewed local composer artifact.
     - id: dsh-ppt-composer
       name: 'dsh-ppt-composer'

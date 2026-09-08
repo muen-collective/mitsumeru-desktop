@@ -2,7 +2,7 @@ diff --git a/node_modules/@deepseek-ai/dsh/package.json b/node_modules/@deepseek
 index 28eaff9..2445f81 100644
 --- a/node_modules/@deepseek-ai/dsh/package.json
 +++ b/node_modules/@deepseek-ai/dsh/package.json
-@@ -28,6 +28,12 @@
+@@ -28,6 +28,13 @@
    },
    "license": "MIT",
    "dependencies": {
@@ -12,6 +12,7 @@ index 28eaff9..2445f81 100644
 +    "dsh-desktop-market-installer": "0.1.0",
 +    "dsh-desktop-preset-transfer": "0.1.0",
 +    "@muen/dsh-brand-mitsumeru": "0.0.1",
++    "dsh-advanced-panel": "0.1.30",
      "commander": "^15.0.0",
      "js-yaml": "^4.2.0",
      "node-addon-require-builtin": "^0.1.4",
