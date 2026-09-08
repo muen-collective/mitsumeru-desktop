@@ -36,9 +36,7 @@ As versões instaladas verificam atualizações logo após a inicialização e a
 ## Comunidade
 
 <p align="center">
-  Leia o código QR abaixo com o WeChat para entrar no grupo do DSH Desktop.<br />
-  <img src="docs/images/wechat-group-20260815.png" width="220" alt="Código QR do grupo do DSH Desktop no WeChat" /><br />
-  Você também pode entrar na <a href="https://discord.gg/he2gAKCpj">comunidade do DSH Desktop no Discord</a>.
+  Você também pode entrar na <a href="https://discord.gg/MNyCEBVqn">comunidade do Mitsumeru no Discord</a>.
 </p>
 
 ## O que o DSH Desktop acrescenta

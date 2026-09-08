@@ -496,7 +496,8 @@
       setText('show-log', model.logLabel)
       setText('quit', model.quitLabel)
       const discord = document.getElementById('community-discord')
-      if (discord) discord.title = model.locale === 'zh' ? '在浏览器中打开 Discord 社区' : 'Open our Discord community in your browser'
+      if (discord) discord.title = model.locale === 'zh'
+        ? '在浏览器中打开 Discord 社区'
         : 'Open our Discord community in your browser'
       const safeModeBtn = document.getElementById('safe-mode')
       if (safeModeBtn) {

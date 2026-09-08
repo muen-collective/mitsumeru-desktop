@@ -35,9 +35,7 @@ macOS および Windows 向けの DSH Desktop は、[公式 Web サイト](https
 ## コミュニティ
 
 <p align="center">
-  下の QR コードを WeChat で読み取り、DSH Desktop コミュニティグループに参加してください。<br />
-  <img src="docs/images/wechat-group-20260815.png" width="220" alt="DSH Desktop WeChat グループの QR コード" /><br />
-  Discord を利用する場合は、<a href="https://discord.gg/he2gAKCpj">DSH Desktop Discord コミュニティ</a>にも参加できます。
+  Discord を利用する場合は、<a href="https://discord.gg/MNyCEBVqn">Mitsumeru Discord コミュニティ</a>にも参加できます。
 </p>
 
 ## DSH Desktop が追加する機能

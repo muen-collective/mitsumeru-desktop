@@ -129,7 +129,7 @@ async function main(): Promise<void> {
       await contents.executeJavaScript("document.getElementById('community-discord').click()")
       await delay(60)
       assert.equal(contents.getURL(), before)
-      assert.deepEqual(external.splice(0), ['https://discord.gg/he2gAKCpj'])
+      assert.deepEqual(external.splice(0), ['https://discord.gg/MNyCEBVqn'])
       results.push({ page, locale, theme, requestedSize: [width,height], layout, popup })
     }
     assert.deepEqual(rendererErrors, [])
