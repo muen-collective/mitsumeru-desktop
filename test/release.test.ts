@@ -158,7 +158,7 @@ describe('GitHub release contract', () => {
       'utf8'
     )
 
-    expect(packageJson.build.artifactName).toBe('mitsumeru-${os}-${arch}.${ext}')
+    expect(packageJson.build.artifactName).toBe('mitsumeru-${version}-${os}-${arch}.${ext}')
     expect(packageJson.build.extraResources).toContainEqual({
       from: 'build/app-icon.png',
       to: 'icon.png'
@@ -190,7 +190,7 @@ describe('GitHub release contract', () => {
       to: 'dsh-desktop.patch.yml'
     })
     expect(packageJson.build.nsis.artifactName).toBe(
-      'mitsumeru-windows-${arch}-setup.${ext}'
+      'mitsumeru-${version}-windows-${arch}-setup.${ext}'
     )
     expect(packageJson.build.nsis.include).toBe('build/installer.nsh')
     expect(packageJson.build.win.target).toEqual([{ target: 'nsis', arch: ['x64'] }])

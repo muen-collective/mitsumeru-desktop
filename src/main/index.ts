@@ -30,7 +30,7 @@ import {
   clearProfileInstallMarker,
   markProfileInstallComplete
 } from './state/profile-install-marker'
-import { healProfileBundles, inspectProfileConsistency } from './state/profile-consistency'
+import { healProfileBundles, inspectProfileConsistency, pruneStaleProfileBundles } from './state/profile-consistency'
 import {
   disableProfilePlugins,
   inspectProfileCompatibility,
@@ -1037,6 +1037,10 @@ async function showSplash(): Promise<void> {
  */
 async function reportProfileConsistency(dshHome: string): Promise<void> {
   try {
+    const pruned = await pruneStaleProfileBundles(dshHome, join(app.getAppPath(), 'node_modules'))
+    if (pruned.length > 0) {
+      runtime.note(`[desktop] auto-removed ${pruned.length} stale bundle(s) from profile: ${pruned.join(', ')}`)
+    }
     const healed = await healProfileBundles(dshHome)
     if (healed.length > 0) {
       runtime.note(`[desktop] auto-composed ${healed.length} missing bundle(s): ${healed.join(', ')}`)
@@ -1249,6 +1253,14 @@ function launchHarness(): Promise<void> {
             : 'the pre-upgrade migration snapshot is missing'
           await enterMigrationSafeRecovery(dshHome, reason)
         }
+      }
+      // Non-migration startup failure: show the plugin recovery page so the
+      // user is not left staring at a blank splash screen.
+      if (runtime.snapshot().phase !== 'ready') {
+        const msg = runtime.snapshot().message || 'Harness failed to start'
+        runtime.note(`[desktop] non-migration startup failure: ${msg}`)
+        void showPluginRecovery({ message: msg }).catch(showUnexpectedError)
+        return
       }
     }
     if (runtime.snapshot().phase === 'ready') safeModeSuspectedPlugins = []

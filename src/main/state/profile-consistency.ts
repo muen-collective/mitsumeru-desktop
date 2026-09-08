@@ -203,3 +203,53 @@ export async function healProfileBundles(dshHome: string): Promise<string[]> {
 
   return healed
 }
+
+/**
+ * Remove stale bundle declarations from the profile manifest. A bundle is
+ * stale when it is declared in dsh.profile.bundles but not materialized as
+ * an installed package AND not present as a bundled app dependency. This
+ * prevents the Harness from crashing on missing packages left behind by
+ * uninstalled plugins.
+ */
+export async function pruneStaleProfileBundles(
+  dshHome: string,
+  appNodeModulesPath: string
+): Promise<string[]> {
+  const manifestPath = profilePackageJsonPath(dshHome)
+  let manifest: ProfileManifest & { dsh?: { profile?: { bundles?: string[] }; [key: string]: unknown }; [key: string]: unknown }
+  try {
+    manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+  } catch {
+    return []
+  }
+
+  const bundles = manifest.dsh?.profile?.bundles
+  if (!bundles || bundles.length === 0) return []
+
+  const nodeModulesPath = join(dirname(manifestPath), 'node_modules')
+  const removed: string[] = []
+  const kept: string[] = []
+
+  for (const bundle of bundles) {
+    // Check if the bundle is installed in the profile or bundled in the app
+    const { installed: inProfile } = await inspectPackage(nodeModulesPath, bundle)
+    const { installed: inApp } = await inspectPackage(appNodeModulesPath, bundle)
+    if (inProfile || inApp) {
+      kept.push(bundle)
+    } else {
+      removed.push(bundle)
+    }
+  }
+
+  if (removed.length > 0) {
+    manifest.dsh!.profile!.bundles = kept
+    try {
+      const { writeFile } = await import('node:fs/promises')
+      await writeFile(manifestPath, `${JSON.stringify(manifest, undefined, 2)}\n`, 'utf8')
+    } catch {
+      // Best-effort; never crash startup if write fails
+    }
+  }
+
+  return removed
+}

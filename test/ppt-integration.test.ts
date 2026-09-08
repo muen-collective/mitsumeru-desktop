@@ -176,22 +176,17 @@ describe('DSH PPT built-in plugin', () => {
   it('integrates hero mode actions with the adjacent agent-preset control style', async () => {
     const patch = await readFile(path.join(
       projectRoot,
-      'patches',
-      '@deepseek-ai+dsh-client-ui-conversation+0.1.2-rc.1.patch'
+      'packages',
+      'ppt-runtime',
+      'adapter',
+      'lib',
+      'client.js'
     ), 'utf8')
 
-    expect(patch).toContain(
-      '[data-slot=conversation\\\\.hero\\\\.agentPreset]>span{width:max-content!important;min-width:0!important',
-    )
-    expect(patch).toContain('._8JRpoa_heroModeCluster{width:max-content')
-    expect(patch).not.toContain('._8JRpoa_heroModeCluster{margin-left:auto')
-    expect(patch).toContain('._8JRpoa_heroModeCluster button{')
-    expect(patch).toContain('height:28px')
-    expect(patch).toContain('border:0!important')
-    expect(patch).toContain('color:var(--dsw-alias-label-primary)!important')
-    expect(patch).toContain('button[data-selected=true]')
-    expect(patch).toContain('var(--dsw-alias-state-business-primary) 10%')
-    expect(patch).toContain('button:focus-visible')
+    expect(patch).toContain('._8JRpoa_heroModeCluster button[data-desktop-ppt]')
+    expect(patch).toContain('button[data-desktop-ppt][data-selected=true]')
+    expect(patch).toContain('button[data-desktop-ppt]:focus-visible')
+    expect(patch).toContain('prefers-reduced-motion:reduce')
   })
 
   it('renders the selected template before editable prompt text', async () => {
