@@ -1254,12 +1254,13 @@ function launchHarness(): Promise<void> {
           await enterMigrationSafeRecovery(dshHome, reason)
         }
       }
-      // Non-migration startup failure: show the plugin recovery page so the
-      // user is not left staring at a blank splash screen.
+      // Non-migration startup failure: show a dialog with the error
+      // instead of leaving the user staring at a blank splash screen.
       if (runtime.snapshot().phase !== 'ready') {
         const msg = runtime.snapshot().message || 'Harness failed to start'
         runtime.note(`[desktop] non-migration startup failure: ${msg}`)
-        void showPluginRecovery({ message: msg }).catch(showUnexpectedError)
+        const logPath = join(app.getPath('userData'), '..', 'Logs', 'Mitsumeru', 'harness.log')
+        showStartupError(new Error(msg), logPath)
         return
       }
     }
@@ -1602,6 +1603,28 @@ async function waitForPluginRecoveryAction(options: {
   if (window.isDestroyed() || navigationVersion !== mainWindowNavigationVersion) return 'quit'
   raiseWindowWithoutStealingFocus(window, process.platform, () => app.isActive())
   return actionPromise
+}
+
+function showStartupError(error: unknown, logPath?: string): void {
+  const message = error instanceof Error ? error.message : String(error)
+  const detail = error instanceof Error ? (error.stack ?? error.message) : String(error)
+  const logInfo = logPath ? `\n\nLog: ${logPath}` : ''
+  const result = dialog.showMessageBoxSync({
+    type: 'error',
+    title: 'Mitsumeru failed to start',
+    message,
+    detail: `${detail}${logInfo}`,
+    buttons: ['Open Log', 'Safe Mode', 'Quit'],
+    defaultId: 0,
+    cancelId: 2
+  })
+  if (result === 0 && logPath) {
+    void shell.openPath(logPath)
+  } else if (result === 1) {
+    void showSafeMode().catch(showUnexpectedError)
+  } else {
+    app.quit()
+  }
 }
 
 function showUnexpectedError(error: unknown): void {
