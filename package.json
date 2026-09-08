@@ -271,7 +271,7 @@
     "@deepseek-ai/dsh-workflow-worker-thread": "file:packages/harness-0.1.2-rc.1/npm-dsh/deepseek-ai-dsh-workflow-worker-thread-0.1.2-rc.1.tgz",
     "@deepseek-ai/dsh-workspace": "file:packages/harness-0.1.2-rc.1/npm-dsh/deepseek-ai-dsh-workspace-0.1.2-rc.1.tgz",
     "@deepseek-ai/schemastery": "file:packages/harness-0.1.2-rc.1/npm-vendor/deepseek-ai-schemastery-3.18.2.tgz",
-    "@muen/dsh-brand-mitsumeru": "file:packages/muen-dsh-brand-mitsumeru-0.0.2.tgz",
+    "@muen/dsh-brand-mitsumeru": "file:packages/muen-dsh-brand-mitsumeru-0.0.3.tgz",
     "dsh-ppt": "file:packages/ppt-bundles/dsh-ppt-0.1.1-rc.2-desktop-20260906.tgz",
     "dsh-ppt-composer": "file:packages/ppt-bundles/dsh-ppt-composer-0.1.1-rc.2-desktop-20260906.tgz",
     "@muen/mitsu-sidebar": "file:packages/mitsu-sidebar",
