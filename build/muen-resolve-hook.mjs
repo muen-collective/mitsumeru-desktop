@@ -4,15 +4,32 @@
 // are also in the app bundle's node_modules but the internal loader's
 // resolution doesn't find them. This hook intercepts bare @muen/*
 // specifiers and resolves them to the correct file paths.
+//
+// Layout (electron-builder, asar: false):
+//   Resources/
+//     muen-resolve-hook.mjs   ← this file (extraResource)
+//     app/
+//       node_modules/          ← where @muen packages live
+//       out/
+//       package.json
+//
+// So: dirname(this) / ../app/node_modules
 
 import { readFileSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, join, resolve } from 'node:path'
+import { existsSync } from 'node:fs'
 
-const APP_NODE_MODULES = join(
-  dirname(fileURLToPath(import.meta.url)),
-  '..', '..', 'node_modules'
-)
+const SELF_DIR = dirname(fileURLToPath(import.meta.url))
+
+// Try the electron-builder layout first (Resources/app/node_modules),
+// then fall back to the two-level-up path for non-bundled environments.
+const CANDIDATES = [
+  join(SELF_DIR, 'app', 'node_modules'),
+  join(SELF_DIR, '..', 'node_modules'),
+]
+
+const APP_NODE_MODULES = CANDIDATES.find(p => existsSync(p)) ?? CANDIDATES[0]
 
 const PKG_CACHE = new Map()
 
