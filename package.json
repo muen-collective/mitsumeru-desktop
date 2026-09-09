@@ -1,6 +1,6 @@
 {
   "name": "mitsumeru-desktop",
-  "version": "0.0.2",
+  "version": "0.0.3-dev",
   "description": "Mitsumeru — a fork of DeepSeek Harness (DSH) for building bespoke Brand OS applications.",
   "private": true,
   "type": "module",

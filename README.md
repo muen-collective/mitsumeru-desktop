@@ -33,6 +33,35 @@ npm run dev
 
 Unsigned dev installers are produced from the `release.yml` workflow via `workflow_dispatch` (macOS arm64 + Intel x64, Windows x64). Signed/notarized releases are cut on `v*` tags once Apple signing secrets are configured.
 
+## Download & install (end users)
+
+The latest test build is published as a GitHub **pre-release** (`v0.0.3-dev`).
+
+1. Open the [releases page](https://github.com/muen-collective/mitsumeru-desktop/releases).
+2. Pick your platform:
+   - **macOS Apple Silicon** — `mitsumeru-0.0.3-dev-mac-arm64.dmg`
+   - **macOS Intel** — `mitsumeru-0.0.3-dev-mac-x64.dmg`
+   - **Windows x64** — `mitsumeru-0.0.3-dev-windows-x64-setup.exe`
+3. Open the DMG (or run the installer), drag **Mitsumeru** into **Applications**.
+4. Launch Mitsumeru.
+
+### First run (macOS)
+
+Because the test build is not notarized, macOS may warn that it can't verify the app:
+
+1. Open **System Settings → Privacy & Security**.
+2. Scroll to **Security** and click **Open Anyway** next to Mitsumeru.
+3. Launch Mitsumeru again.
+
+### Add an API key
+
+1. Open **Settings** in the app.
+2. Go to **Models**.
+3. Add a provider and paste your API **key** (DSH Desktop is BYOK — bring your own key).
+4. Save; the app connects to the model provider.
+
+That's it. The first chat message confirms the model is reachable and the key works.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). Attribution to upstream `dataelement/dsh-desktop`.
